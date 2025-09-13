@@ -71,6 +71,11 @@ public class User {
         this.role = role;
     }
 
+    // Helper
+    public void updatePinHashDirectly(String hashedPin) {
+        this.pinHash = hashedPin;
+    }
+
     // toString
     @Override
     public String toString() {
