@@ -1,5 +1,7 @@
 package com.banking.models;
 
+import com.banking.utils.GeneralUtils;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -7,7 +9,7 @@ public class Account {
 
     private final UUID accountId = UUID.randomUUID();
     private final UUID userId;
-    private String accountNumber = "xxx-xxx-xxx"; // ToDo: Generate Account Numbers
+    private String accountNumber = GeneralUtils.generateAccountNumber();
     private BigDecimal balance = BigDecimal.ZERO;
     private String currency = "ZAR";
     private boolean isActive = true;
