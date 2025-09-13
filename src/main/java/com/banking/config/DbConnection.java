@@ -10,7 +10,7 @@ public class DbConnection {
     private static String username = "sa";
     private static String password = "";
 
-    public static void getConnection() throws SQLException {
-        Connection conn = DriverManager.getConnection(url, username, password);
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, username, password);
     }
 }
