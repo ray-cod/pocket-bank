@@ -8,36 +8,55 @@ import java.util.UUID;
 
 public class Transaction {
 
-    private final UUID transactionId = UUID.randomUUID();
+    private final UUID transactionId;
     private final UUID accountId;
     private TransactionType type;
     private BigDecimal amount;
     private BigDecimal balanceAfter;
     private String description;
     private final UUID destAccountId;
-    private final LocalDateTime timestamp = LocalDateTime.now();
+    private final LocalDateTime timestamp;
 
     // Constructors
     public Transaction(UUID accountId, TransactionType type,
                        BigDecimal amount, BigDecimal balanceAfter,
                        String description) {
+        this.transactionId = UUID.randomUUID();
         this.accountId = accountId;
         this.type = type;
         this.amount = amount;
         this.balanceAfter = balanceAfter;
         this.description = description;
         this.destAccountId = null;
+        this.timestamp = LocalDateTime.now();
     }
 
-    public Transaction(UUID accountId, TransactionType type,
-                       BigDecimal amount, BigDecimal balanceAfter,
-                       String description, UUID destAccountId) {
+    // used when loading from DB:
+    public Transaction(UUID transactionId, UUID accountId,
+                       TransactionType type, BigDecimal amount,
+                       BigDecimal balanceAfter, String description,
+                       UUID destAccountId, LocalDateTime timestamp) {
+        this.transactionId = transactionId;
         this.accountId = accountId;
         this.type = type;
         this.amount = amount;
         this.balanceAfter = balanceAfter;
         this.description = description;
         this.destAccountId = destAccountId;
+        this.timestamp = timestamp;
+    }
+
+    public Transaction(UUID accountId, TransactionType type,
+                       BigDecimal amount, BigDecimal balanceAfter,
+                       String description, UUID destAccountId) {
+        this.transactionId = UUID.randomUUID();
+        this.accountId = accountId;
+        this.type = type;
+        this.amount = amount;
+        this.balanceAfter = balanceAfter;
+        this.description = description;
+        this.destAccountId = destAccountId;
+        this.timestamp = LocalDateTime.now();
     }
 
     // Getters & Setters

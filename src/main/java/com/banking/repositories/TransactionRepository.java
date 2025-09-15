@@ -4,7 +4,9 @@ import com.banking.config.DbConnection;
 import com.banking.models.Transaction;
 import com.banking.utils.enums.TransactionType;
 
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,15 +24,17 @@ public class TransactionRepository {
                 balance_after DECIMAL(15,2) NOT NULL,
                 description VARCHAR(255),
                 dest_account_id UUID,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (account_id) REFERENCES accounts(account_id),
+                FOREIGN KEY (dest_account_id) REFERENCES accounts(account_id)
             )
         """;
 
         try (Connection conn = DbConnection.getConnection();
              Statement stmt = conn.createStatement()) {
-
             stmt.execute(sql);
-
+            // optional: create index for faster lookups
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id)");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -53,7 +57,7 @@ public class TransactionRepository {
             pstmt.setBigDecimal(4, transaction.getAmount());
             pstmt.setBigDecimal(5, transaction.getBalanceAfter());
             pstmt.setString(6, transaction.getDescription());
-            pstmt.setObject(7, transaction.getDestAccountId());
+            pstmt.setObject(7, transaction.getDestAccountId()); // handles null
             pstmt.setTimestamp(8, Timestamp.valueOf(transaction.getTimestamp()));
 
             pstmt.executeUpdate();
@@ -72,29 +76,26 @@ public class TransactionRepository {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setObject(1, accountId);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    UUID txId = rs.getObject("transaction_id", UUID.class);
+                    UUID acctId = rs.getObject("account_id", UUID.class);
+                    TransactionType type = TransactionType.valueOf(rs.getString("type"));
+                    BigDecimal amount = rs.getBigDecimal("amount");
+                    BigDecimal balanceAfter = rs.getBigDecimal("balance_after");
+                    String description = rs.getString("description");
+                    UUID destId = rs.getObject("dest_account_id", UUID.class);
+                    Timestamp ts = rs.getTimestamp("timestamp");
+                    LocalDateTime timestamp = ts != null ? ts.toLocalDateTime() : LocalDateTime.now();
 
-            while (rs.next()) {
-                UUID destId = rs.getObject("dest_account_id", UUID.class);
-
-                Transaction transaction = (destId == null) ?
-                        new Transaction(
-                                rs.getObject("account_id", UUID.class),
-                                TransactionType.valueOf(rs.getString("type")),
-                                rs.getBigDecimal("amount"),
-                                rs.getBigDecimal("balance_after"),
-                                rs.getString("description")
-                        ) :
-                        new Transaction(
-                                rs.getObject("account_id", UUID.class),
-                                TransactionType.valueOf(rs.getString("type")),
-                                rs.getBigDecimal("amount"),
-                                rs.getBigDecimal("balance_after"),
-                                rs.getString("description"),
-                                destId
-                        );
-
-                transactions.add(transaction);
+                    Transaction tx = new Transaction(
+                            txId, acctId,
+                            type, amount,
+                            balanceAfter, description,
+                            destId, timestamp
+                    );
+                    transactions.add(tx);
+                }
             }
 
         } catch (SQLException e) {
@@ -114,26 +115,23 @@ public class TransactionRepository {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                UUID txId = rs.getObject("transaction_id", UUID.class);
+                UUID acctId = rs.getObject("account_id", UUID.class);
+                TransactionType type = TransactionType.valueOf(rs.getString("type"));
+                BigDecimal amount = rs.getBigDecimal("amount");
+                BigDecimal balanceAfter = rs.getBigDecimal("balance_after");
+                String description = rs.getString("description");
                 UUID destId = rs.getObject("dest_account_id", UUID.class);
+                Timestamp ts = rs.getTimestamp("timestamp");
+                LocalDateTime timestamp = ts != null ? ts.toLocalDateTime() : LocalDateTime.now();
 
-                Transaction transaction = (destId == null) ?
-                        new Transaction(
-                                rs.getObject("account_id", UUID.class),
-                                TransactionType.valueOf(rs.getString("type")),
-                                rs.getBigDecimal("amount"),
-                                rs.getBigDecimal("balance_after"),
-                                rs.getString("description")
-                        ) :
-                        new Transaction(
-                                rs.getObject("account_id", UUID.class),
-                                TransactionType.valueOf(rs.getString("type")),
-                                rs.getBigDecimal("amount"),
-                                rs.getBigDecimal("balance_after"),
-                                rs.getString("description"),
-                                destId
-                        );
-
-                transactions.add(transaction);
+                Transaction tx = new Transaction(
+                        txId, acctId,
+                        type, amount,
+                        balanceAfter, description,
+                        destId, timestamp
+                );
+                transactions.add(tx);
             }
 
         } catch (SQLException e) {
