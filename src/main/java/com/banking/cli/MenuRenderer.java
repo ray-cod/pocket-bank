@@ -152,7 +152,7 @@ public class MenuRenderer {
                 // for simplicity show nothing if unavailable
             } catch (Exception ignored) {}
 
-            println("1) Accounts & Balances\n2) Transaction History\n3) Withdraw\n4) Deposit\n5) Transfer\n6) Change PIN\n7) Logout\n");
+            println("1) Accounts & Balances\n2) Create an Account\n3) Transaction History\n4) Withdraw\n5) Deposit\n6) Transfer\n7) Change PIN\n8) Logout\n");
             String choice = prompt("Enter choice (1-7) or 'h' for help");
             if (choice == null) return;
             switch (choice.trim()) {
@@ -160,21 +160,24 @@ public class MenuRenderer {
                     handleAccountsMenu(user);
                     break;
                 case "2":
-                    handleTransactionHistory(user);
+                    handleAccountCreation(user);
                     break;
                 case "3":
-                    handleWithdraw(user);
+                    handleTransactionHistory(user);
                     break;
                 case "4":
-                    handleDeposit(user);
+                    handleWithdraw(user);
                     break;
                 case "5":
-                    handleTransfer(user);
+                    handleDeposit(user);
                     break;
                 case "6":
-                    handleChangePin(sessionId);
+                    handleTransfer(user);
                     break;
                 case "7":
+                    handleChangePin(sessionId);
+                    break;
+                case "8":
                     authService.logout(sessionId);
                     println("Logged out.");
                     pause();
@@ -194,7 +197,7 @@ public class MenuRenderer {
         printHeader("Accounts & Balances");
         // For clarity we will call AccountRepository directly to list accounts for this user
         AccountRepository accRepo = new AccountRepository();
-        List<Account> accounts = accRepo.findAll(); // in a full app, filter by user.getUserId()
+        List<Account> accounts = accRepo.findByUser(user);
 
         if (accounts.isEmpty()) {
             println("No accounts found for user.");
@@ -218,6 +221,21 @@ public class MenuRenderer {
             pause();
         }
     }
+
+    private void handleAccountCreation(User user){
+        clearScreen();
+        printHeader("Account Creation");
+
+        try {
+            accountService.createAccount(user, BigDecimal.ZERO);
+            println(ANSI_GREEN + CHECK + " Account successfully created!" + ANSI_RESET);
+            pause();
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            println(ANSI_RED + CROSS + " " + msg + ANSI_RESET);
+            pause();
+        }
+    };
 
     private void showAccountDetails(Account account) {
         clearScreen();

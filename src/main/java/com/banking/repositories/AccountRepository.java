@@ -2,6 +2,7 @@ package com.banking.repositories;
 
 import com.banking.config.DbConnection;
 import com.banking.models.Account;
+import com.banking.models.User;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -15,13 +16,14 @@ public class AccountRepository {
     public void createTable() {
         String sql = """
             CREATE TABLE IF NOT EXISTS accounts (
-                account_id UUID PRIMARY KEY,
-                user_id UUID NOT NULL,
-                account_number VARCHAR(20) UNIQUE NOT NULL,
-                balance DECIMAL(15,2) DEFAULT 0,
-                currency VARCHAR(10),
-                is_active BOOLEAN DEFAULT TRUE
-            )
+                 account_id UUID PRIMARY KEY,
+                 user_id UUID NOT NULL,
+                 account_number VARCHAR(20) UNIQUE NOT NULL,
+                 balance DECIMAL(15,2) DEFAULT 0,
+                 currency VARCHAR(10),
+                 is_active BOOLEAN DEFAULT TRUE,
+                 FOREIGN KEY (user_id) REFERENCES users(user_id)
+             )
         """;
 
         try (Connection conn = DbConnection.getConnection();
@@ -54,6 +56,34 @@ public class AccountRepository {
     }
 
     // Find account by account number
+    public List<Account> findByUser(User user) {
+        List<Account> accounts = new ArrayList<>();
+        String sql = "SELECT * FROM accounts WHERE user_id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setObject(1, user.getUserId());
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                UUID accountId = rs.getObject("account_id", UUID.class);
+                UUID userId = rs.getObject("user_id", UUID.class);
+                String accountNumber = rs.getString("account_number");
+                BigDecimal balance = rs.getBigDecimal("balance");
+                String currency = rs.getString("currency");
+                boolean isActive = rs.getBoolean("is_active");
+
+                Account acc = new Account(accountId, userId, accountNumber, balance, currency, isActive);
+                accounts.add(acc);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return accounts;
+    }
+
+    // Find account by account number
     public Account findByAccountNumber(String accountNumber) {
         String sql = "SELECT * FROM accounts WHERE account_number = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -63,14 +93,39 @@ public class AccountRepository {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                Account acc = new Account(null); // We will set userId manually
-                acc.setAccountNumber(rs.getString("account_number"));
-                acc.setBalance(rs.getBigDecimal("balance"));
-                acc.setCurrency(rs.getString("currency"));
-                acc.setActive(rs.getBoolean("is_active"));
-                return acc;
+                UUID accountId = rs.getObject("account_id", UUID.class);
+                UUID userId = rs.getObject("user_id", UUID.class);
+                BigDecimal balance = rs.getBigDecimal("balance");
+                String currency = rs.getString("currency");
+                boolean isActive = rs.getBoolean("is_active");
+
+                return new Account(accountId, userId, accountNumber, balance, currency, isActive);
             }
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Find account by account_id
+    public Account findByAccountId(UUID accountId) {
+        String sql = "SELECT * FROM accounts WHERE account_id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setObject(1, accountId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    UUID userId = rs.getObject("user_id", UUID.class);
+                    String accountNumber = rs.getString("account_number");
+                    BigDecimal balance = rs.getBigDecimal("balance");
+                    String currency = rs.getString("currency");
+                    boolean isActive = rs.getBoolean("is_active");
+
+                    return new Account(accountId, userId, accountNumber, balance, currency, isActive);
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -104,11 +159,14 @@ public class AccountRepository {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Account acc = new Account(null);
-                acc.setAccountNumber(rs.getString("account_number"));
-                acc.setBalance(rs.getBigDecimal("balance"));
-                acc.setCurrency(rs.getString("currency"));
-                acc.setActive(rs.getBoolean("is_active"));
+                UUID accountId = rs.getObject("account_id", UUID.class);
+                UUID userId = rs.getObject("user_id", UUID.class);
+                String accountNumber = rs.getString("account_number");
+                BigDecimal balance = rs.getBigDecimal("balance");
+                String currency = rs.getString("currency");
+                boolean isActive = rs.getBoolean("is_active");
+
+                Account acc = new Account(accountId, userId, accountNumber, balance, currency, isActive);
                 accounts.add(acc);
             }
 
@@ -117,5 +175,10 @@ public class AccountRepository {
         }
 
         return accounts;
+    }
+
+    public static void main(String[] args) {
+        AccountRepository repo = new AccountRepository();
+        System.out.println(repo.findAll());
     }
 }
