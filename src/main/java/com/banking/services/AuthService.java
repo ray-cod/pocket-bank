@@ -115,10 +115,6 @@ public class AuthService {
      * @return created User
      */
     public User register(String username, String rawPin) throws AuthException {
-        // validate input (reuse existing ValidationUtil rules)
-        ValidationUtil.validateUserName(username);
-        ValidationUtil.validatePinFormat(rawPin);
-
         // check for existing username
         if (userRepository.findByUsername(username) != null) {
             throw new AuthException("Username already exists");
