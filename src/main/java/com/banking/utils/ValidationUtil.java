@@ -5,7 +5,7 @@ public class ValidationUtil {
     private static final int MIN_USERNAME_LENGTH = 3;
     private static final int MAX_USERNAME_LENGTH = 30;
     private static final int MIN_PIN_LENGTH = 4;
-    private static final int MAX_PIN_LENGTH = 6;
+    private static final int MAX_PIN_LENGTH = 20;
 
     // Validate username
     public static void validateUserName(String userName) {
@@ -16,7 +16,7 @@ public class ValidationUtil {
             throw new IllegalArgumentException("Username must be between " + MIN_USERNAME_LENGTH +
                     " and " + MAX_USERNAME_LENGTH + " characters long");
         }
-        if (!userName.matches("^[a-zA-Z0-9_]+$")) {
+        if (!userName.matches("^[a-zA-Z0-9_ ]+$")) {
             throw new IllegalArgumentException("Username can only contain letters, numbers, and underscores");
         }
     }

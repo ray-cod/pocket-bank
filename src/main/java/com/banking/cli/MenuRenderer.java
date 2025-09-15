@@ -75,15 +75,18 @@ public class MenuRenderer {
                 case "1": // Login
                     doLoginFlow();
                     break;
-                case "2": // Demo mode
+                case "2": // Register
+                    doRegisterFlow();
+                    break;
+                case "3": // Demo mode
                     System.out.println(ANSI_GREEN + CHECK + " Demo mode is not implemented here; seed data manually." + ANSI_RESET);
                     pause();
                     break;
-                case "3": // Admin
+                case "4": // Admin
                     System.out.println("Admin mode: not exposed from this renderer. Use admin entrypoint.");
                     pause();
                     break;
-                case "4": // Exit
+                case "5": // Exit
                 case "q":
                 case "quit":
                     println("Goodbye.");
@@ -110,6 +113,26 @@ public class MenuRenderer {
             println(ANSI_GREEN + CHECK + " Login successful — Welcome, " + username + "!" + ANSI_RESET);
             pause();
             showMainMenu(sessionId);
+        } catch (AuthException e) {
+            String msg = e.getMessage();
+            println(ANSI_RED + CROSS + " " + msg + ANSI_RESET);
+            pause();
+        }
+    }
+
+    private void doRegisterFlow() {
+        clearScreen();
+        printHeader("Register");
+        String username = prompt("Create username");
+        if (isBackOrQuit(username)) return;
+
+        String pin = promptForPin("Create PIN");
+        if (isBackOrQuit(pin)) return;
+
+        try {
+            authService.register(username.trim(), pin.trim());
+            println(ANSI_GREEN + CHECK + " Registration successful — You may login as, " + username + "." + ANSI_RESET);
+            pause();
         } catch (AuthException e) {
             String msg = e.getMessage();
             println(ANSI_RED + CROSS + " " + msg + ANSI_RESET);
@@ -413,10 +436,10 @@ public class MenuRenderer {
     // ---------- Helpers ----------
     private void printWelcome() {
         println("╔════════════════════════════════════════════════════════╗");
-        println("║                      WeShare ATM CLI                   ║");
-        println("║            Simple. Secure. Delightful. (Demo)          ║");
+        println("║                      Pocket Bank ATM                   ║");
+        println("║                 Simple. Secure. Delightful.            ║");
         println("╚════════════════════════════════════════════════════════╝\n");
-        println("1) Login\n2) Demo mode (seeded accounts)\n3) Admin\n4) Exit\n");
+        println("1) Login\n2) Register\n3) Demo mode (seeded accounts)\n4) Admin\n5) Exit\n");
     }
 
     private void printHeader(String title) {

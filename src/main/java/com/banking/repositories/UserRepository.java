@@ -65,7 +65,7 @@ public class UserRepository {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                User user = new User(rs.getString("username"), "dummy"); // pin will be overwritten
+                User user = new User(rs.getString("username"), "0000"); // pin will be overwritten
                 user.setLocked(rs.getBoolean("locked"));
                 user.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));
                 user.setRole(UserRole.valueOf(rs.getString("role")));
