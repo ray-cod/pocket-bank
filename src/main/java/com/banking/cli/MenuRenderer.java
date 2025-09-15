@@ -78,15 +78,11 @@ public class MenuRenderer {
                 case "2": // Register
                     doRegisterFlow();
                     break;
-                case "3": // Demo mode
-                    System.out.println(ANSI_GREEN + CHECK + " Demo mode is not implemented here; seed data manually." + ANSI_RESET);
-                    pause();
-                    break;
-                case "4": // Admin
+                case "3": // Admin
                     System.out.println("Admin mode: not exposed from this renderer. Use admin entrypoint.");
                     pause();
                     break;
-                case "5": // Exit
+                case "4": // Exit
                 case "q":
                 case "quit":
                     println("Goodbye.");
@@ -457,7 +453,7 @@ public class MenuRenderer {
         println("║                      Pocket Bank ATM                   ║");
         println("║                 Simple. Secure. Delightful.            ║");
         println("╚════════════════════════════════════════════════════════╝\n");
-        println("1) Login\n2) Register\n3) Demo mode (seeded accounts)\n4) Admin\n5) Exit\n");
+        println("1) Login\n2) Register\n3) Admin\n4) Exit\n");
     }
 
     private void printHeader(String title) {
