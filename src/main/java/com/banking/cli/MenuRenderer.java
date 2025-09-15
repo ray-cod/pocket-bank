@@ -153,7 +153,7 @@ public class MenuRenderer {
             } catch (Exception ignored) {}
 
             println("1) Accounts & Balances\n2) Create an Account\n3) Transaction History\n4) Withdraw\n5) Deposit\n6) Transfer\n7) Change PIN\n8) Logout\n");
-            String choice = prompt("Enter choice (1-7) or 'h' for help");
+            String choice = prompt("Enter choice (1-8) or 'h' for help");
             if (choice == null) return;
             switch (choice.trim()) {
                 case "1":

@@ -23,25 +23,20 @@ public class UserRepository {
                 role VARCHAR(20) DEFAULT 'USER'
             )
         """;
-
         try (Connection conn = DbConnection.getConnection();
              Statement stmt = conn.createStatement()) {
-
             stmt.execute(sql);
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    // Save new user
     public void save(User user) {
         String sql = "INSERT INTO users (user_id, username, pin_hash, locked, failed_login_attempts, role) VALUES (?, ?, ?, ?, ?, ?)";
-
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setObject(1, user.getUserId());
+            pstmt.setObject(1, user.getUserId());        // use setObject for UUID
             pstmt.setString(2, user.getUserName());
             pstmt.setString(3, user.getPinHash());
             pstmt.setBoolean(4, user.isLocked());
@@ -55,24 +50,24 @@ public class UserRepository {
         }
     }
 
-    // Find user by username
     public User findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    UUID userId = rs.getObject("user_id", UUID.class);
+                    String uname = rs.getString("username");
+                    String pinHash = rs.getString("pin_hash");
+                    boolean locked = rs.getBoolean("locked");
+                    int attempts = rs.getInt("failed_login_attempts");
+                    UserRole role = UserRole.valueOf(rs.getString("role"));
 
-            if (rs.next()) {
-                User user = new User(rs.getString("username"), "0000"); // pin will be overwritten
-                user.setLocked(rs.getBoolean("locked"));
-                user.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));
-                user.setRole(UserRole.valueOf(rs.getString("role")));
-
-                // Overwrite pin hash
-                user.updatePinHashDirectly(rs.getString("pin_hash")); // helper method, see below
-                return user;
+                    // Use DB constructor so we preserve the stored UUID & hash
+                    return new User(userId, uname, pinHash, locked, attempts, role);
+                }
             }
 
         } catch (SQLException e) {
@@ -81,10 +76,32 @@ public class UserRepository {
         return null;
     }
 
-    // Update failed login attempts
+    public User findById(UUID userId) {
+        String sql = "SELECT * FROM users WHERE user_id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setObject(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String uname = rs.getString("username");
+                    String pinHash = rs.getString("pin_hash");
+                    boolean locked = rs.getBoolean("locked");
+                    int attempts = rs.getInt("failed_login_attempts");
+                    UserRole role = UserRole.valueOf(rs.getString("role"));
+
+                    return new User(userId, uname, pinHash, locked, attempts, role);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public void updateFailedLoginAttempts(UUID userId, int attempts) {
         String sql = "UPDATE users SET failed_login_attempts = ? WHERE user_id = ?";
-
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -97,10 +114,8 @@ public class UserRepository {
         }
     }
 
-    // Lock or unlock account
     public void setLocked(UUID userId, boolean locked) {
         String sql = "UPDATE users SET locked = ? WHERE user_id = ?";
-
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -113,28 +128,42 @@ public class UserRepository {
         }
     }
 
-    // Get all users
+    // Persist a newly hashed PIN (use this instead of raw JDBC in AuthService)
+    public void updatePinHash(UUID userId, String newHash) {
+        String sql = "UPDATE users SET pin_hash = ? WHERE user_id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newHash);
+            pstmt.setObject(2, userId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public List<User> findAll() {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM users";
-
         try (Connection conn = DbConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                User user = new User(rs.getString("username"), "dummy");
-                user.setLocked(rs.getBoolean("locked"));
-                user.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));
-                user.setRole(UserRole.valueOf(rs.getString("role")));
-                user.updatePinHashDirectly(rs.getString("pin_hash"));
-                users.add(user);
+                UUID userId = rs.getObject("user_id", UUID.class);
+                String uname = rs.getString("username");
+                String pinHash = rs.getString("pin_hash");
+                boolean locked = rs.getBoolean("locked");
+                int attempts = rs.getInt("failed_login_attempts");
+                UserRole role = UserRole.valueOf(rs.getString("role"));
+
+                users.add(new User(userId, uname, pinHash, locked, attempts, role));
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return users;
     }
 }

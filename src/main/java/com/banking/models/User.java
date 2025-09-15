@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public class User {
 
-    private final UUID userId = UUID.randomUUID();
+    private final UUID userId;
     private String userName;
     private String pinHash;
     private boolean locked = false;
@@ -20,9 +20,23 @@ public class User {
         ValidationUtil.validateUserName(userName);
         ValidationUtil.validatePinFormat(pin);
 
+        this.userId = UUID.randomUUID();
         this.userName = userName;
         this.pinHash = CryptoUtil.hashPassword(pin);
     }
+
+    // User with DB
+    public User(UUID userId, String userName,
+                String pinHash, boolean locked,
+                int failedLoginAttempts, UserRole role) {
+        this.userId = userId;
+        this.userName = userName;
+        this.pinHash = pinHash;
+        this.locked = locked;
+        this.failedLoginAttempts = failedLoginAttempts;
+        this.role = role == null ? UserRole.USER : role;
+    }
+
 
     // Getters & Setters
     public String getUserName() {

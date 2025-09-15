@@ -176,9 +176,4 @@ public class AccountRepository {
 
         return accounts;
     }
-
-    public static void main(String[] args) {
-        AccountRepository repo = new AccountRepository();
-        System.out.println(repo.findAll());
-    }
 }
