@@ -7,7 +7,7 @@ It demonstrates secure authentication, clean layered architecture (repositories 
 
 ## Demo Screenshots
 
-
+![Raimi Dikamona Lassissi - pocket bank screenshot](docs/images/atm_img.png)
 
 ---
 
