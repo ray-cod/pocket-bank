@@ -7,7 +7,7 @@ It demonstrates secure authentication, clean layered architecture (repositories 
 
 ## Demo Screenshots
 
-![Raimi Dikamona Lassissi - pocket bank screenshot](docs/images/atm_img.png)
+![Raimi Dikamona Lassissi - pocket bank screenshot](docs/images/atm_image.png)
 
 ---
 
@@ -79,7 +79,7 @@ Pocket Bank is an interactive terminal application that simulates an ATM / perso
 mvn clean package
 
 # Run (normal)
-java java -jar target/pocket-bank-1.0-SNAPSHOT.jar
+java -jar target/pocket-bank-1.0-SNAPSHOT.jar
 ```
 
 ### Run from your IDE
